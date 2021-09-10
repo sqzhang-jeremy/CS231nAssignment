@@ -1,5 +1,7 @@
+from builtins import range
 import numpy as np
-
+from random import shuffle
+from past.builtins import xrange
 
 def softmax_loss_naive(W, X, y, reg):
     """
@@ -24,32 +26,36 @@ def softmax_loss_naive(W, X, y, reg):
     dW = np.zeros_like(W)
 
     #############################################################################
-    # Compute the softmax loss and its gradient using explicit loops.           #
+    # TODO: Compute the softmax loss and its gradient using explicit loops.     #
     # Store the loss in loss and the gradient in dW. If you are not careful     #
     # here, it is easy to run into numeric instability. Don't forget the        #
     # regularization!                                                           #
     #############################################################################
     # *****START OF YOUR CODE (DO NOT DELETE/MODIFY THIS LINE)*****
-
-    num_classes = W.shape[1]
     num_train = X.shape[0]
-
+    num_class = W.shape[1]
+    
     for i in range(num_train):
-        scores = X[i] @ W
-        scores -= np.max(scores)
-        sum_scores = np.sum(np.exp(scores))
-        loss -= scores[y[i]]
-        loss += np.log(sum_scores)
-        for j in range(num_classes):
-            dW[:, j] += X[i] * np.exp(scores[j]) / sum_scores
+        scores = X[i].dot(W)
+        correct_class_score = scores[y[i]]
+        #为了防止数值不稳定性，减去max(scores)
+        shift_scores = scores - np.max(scores)
+        loss += -shift_scores[y[i]] + np.log(np.sum(np.exp(shift_scores)))
+        
+        for j in range(num_class):
+            sofemax_variant= np.exp(shift_scores[j])/np.sum(np.exp(shift_scores))
             if j == y[i]:
-                dW[:, j] -= X[i]
-
+                dW[:, j] += (-1+sofemax_variant)*X[i,:]
+            else:
+                dW[:, j] += sofemax_variant*X[i,:]
+            
+    data_loss = loss / num_train
+    reg_loss = 0.5*reg*np.sum(W*W)
+    loss = data_loss + reg_loss
+                                              
     dW /= num_train
     dW += reg * W
-    loss /= num_train
-    loss += 0.5 * reg * np.sum(W * W)
-
+    
     # *****END OF YOUR CODE (DO NOT DELETE/MODIFY THIS LINE)*****
 
     return loss, dW
@@ -66,32 +72,32 @@ def softmax_loss_vectorized(W, X, y, reg):
     dW = np.zeros_like(W)
 
     #############################################################################
-    # Compute the softmax loss and its gradient using no explicit loops.        #
+    # TODO: Compute the softmax loss and its gradient using no explicit loops.  #
     # Store the loss in loss and the gradient in dW. If you are not careful     #
     # here, it is easy to run into numeric instability. Don't forget the        #
     # regularization!                                                           #
     #############################################################################
     # *****START OF YOUR CODE (DO NOT DELETE/MODIFY THIS LINE)*****
-
-    num_classes = W.shape[1]
     num_train = X.shape[0]
+    
+    scores = np.dot(X,W)
+    scores -= np.max(scores, axis=1, keepdims=True)
+    scores_exp = np.exp(scores)
+    probs = scores_exp / np.sum(scores_exp, axis=1, keepdims=True)
+    
+    correct_logloss = -np.log(probs[range(num_train), y])
+    data_loss = np.sum(correct_logloss) / num_train 
+    reg_loss = 0.5*reg*np.sum(W * W)
+    loss = data_loss + reg_loss
+    
+    dscores = probs
+    dscores[range(num_train), y] -= 1
+    dscores /= num_train
+    
+    dW = np.dot(X.T, dscores)
+    dW += reg*W
+    
 
-    scores = X @ W
-    scores -= np.max(scores, axis=1,keepdims=True)
-    sum_scores = np.sum(np.exp(scores), 1)
-    loss -= np.sum(scores[np.arange(num_train), y])
-    loss += np.sum(np.log(sum_scores))
-
-    ret = np.zeros(scores.shape)
-    ret += np.exp(scores) / sum_scores.reshape(-1, 1)
-    ret[range(num_train), y] -= 1
-
-    dW += X.T @ ret
-
-    dW /= num_train
-    dW += reg * W
-    loss /= num_train
-    loss += 0.5 * reg * np.sum(W * W)
 
     # *****END OF YOUR CODE (DO NOT DELETE/MODIFY THIS LINE)*****
 

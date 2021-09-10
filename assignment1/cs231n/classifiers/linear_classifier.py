@@ -1,5 +1,11 @@
+from __future__ import print_function
+
+from builtins import range
+from builtins import object
+import numpy as np
 from cs231n.classifiers.linear_svm import *
 from cs231n.classifiers.softmax import *
+from past.builtins import xrange
 
 
 class LinearClassifier(object):
@@ -27,7 +33,7 @@ class LinearClassifier(object):
         A list containing the value of the loss function at each training iteration.
         """
         num_train, dim = X.shape
-        num_classes = np.max(y) + 1  # assume y takes values 0...K-1 where K is number of classes
+        num_classes = np.max(y) + 1 # assume y takes values 0...K-1 where K is number of classes
         if self.W is None:
             # lazily initialize W
             self.W = 0.001 * np.random.randn(dim, num_classes)
@@ -39,6 +45,7 @@ class LinearClassifier(object):
             y_batch = None
 
             #########################################################################
+            # TODO:                                                                 #
             # Sample batch_size elements from the training data and their           #
             # corresponding labels to use in this round of gradient descent.        #
             # Store the data in X_batch and their corresponding labels in           #
@@ -50,9 +57,10 @@ class LinearClassifier(object):
             #########################################################################
             # *****START OF YOUR CODE (DO NOT DELETE/MODIFY THIS LINE)*****
 
-            index = np.random.choice(range(num_train), batch_size, replace=False)
-            X_batch = X[index]
-            y_batch = y[index]
+            ind = np.random.choice(range(num_train), batch_size, replace=True)
+            X_batch = X[ind]
+            y_batch = y[ind]
+            
 
             # *****END OF YOUR CODE (DO NOT DELETE/MODIFY THIS LINE)*****
 
@@ -62,11 +70,12 @@ class LinearClassifier(object):
 
             # perform parameter update
             #########################################################################
+            # TODO:                                                                 #
             # Update the weights using the gradient and the learning rate.          #
             #########################################################################
             # *****START OF YOUR CODE (DO NOT DELETE/MODIFY THIS LINE)*****
 
-            self.W = self.W - learning_rate * grad
+            self.W = self.W - 1 * learning_rate * grad
 
             # *****END OF YOUR CODE (DO NOT DELETE/MODIFY THIS LINE)*****
 
@@ -91,11 +100,13 @@ class LinearClassifier(object):
         """
         y_pred = np.zeros(X.shape[0])
         ###########################################################################
+        # TODO:                                                                   #
         # Implement this method. Store the predicted labels in y_pred.            #
         ###########################################################################
         # *****START OF YOUR CODE (DO NOT DELETE/MODIFY THIS LINE)*****
 
-        y_pred = np.argmax(X @ self.W, 1)
+        scores = X.dot(self.W)
+        y_pred = np.argmax(scores, axis=1)
 
         # *****END OF YOUR CODE (DO NOT DELETE/MODIFY THIS LINE)*****
         return y_pred
